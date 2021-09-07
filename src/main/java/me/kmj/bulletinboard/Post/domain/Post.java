@@ -12,7 +12,7 @@ import javax.persistence.*;
 public class Post {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+	private long id;
 
 	@Column(length = 500, nullable = false)
 	private String title;

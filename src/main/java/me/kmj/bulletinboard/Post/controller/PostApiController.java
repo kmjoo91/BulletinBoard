@@ -1,18 +1,26 @@
 package me.kmj.bulletinboard.Post.controller;
 
 import lombok.AllArgsConstructor;
+import me.kmj.bulletinboard.Post.dto.PostResponse;
 import me.kmj.bulletinboard.Post.dto.PostSaveRequest;
 import me.kmj.bulletinboard.Post.service.PostService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.constraints.Min;
 
 @AllArgsConstructor
 @RestController
+@Controller(value = "/api/v1/posts")
 public class PostApiController {
 	private final PostService postService;
 
-	@PostMapping("/api/v1/posts")
+	@GetMapping("/{id}")
+	public PostResponse findById(@PathVariable @Min(1) long id) {
+		return new PostResponse(postService.findById(id));
+	}
+
+	@PostMapping
 	public Long save(@RequestBody PostSaveRequest postSaveRequest) {
 		return postService.save(postSaveRequest);
 	}
