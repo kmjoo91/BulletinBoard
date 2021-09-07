@@ -4,6 +4,7 @@ import me.kmj.bulletinboard.Post.domain.Post;
 import me.kmj.bulletinboard.Post.domain.PostRepository;
 import me.kmj.bulletinboard.Post.dto.PostResponse;
 import me.kmj.bulletinboard.Post.dto.PostSaveRequest;
+import me.kmj.bulletinboard.Post.dto.PostUpdateRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -79,13 +82,13 @@ class PostApiControllerTest {
 		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
 
 		PostResponse postResponse = responseEntity.getBody();
-		assertThat(postResponse.getId()).isGreaterThan(0);
+		assertThat(postResponse.getId()).isEqualTo(id);
 		assertThat(postResponse.getTitle()).isEqualTo(postSaveRequest.getTitle());
 		assertThat(postResponse.getContent()).isEqualTo(postSaveRequest.getContent());
 		assertThat(postResponse.getAuthor()).isEqualTo(postSaveRequest.getAuthor());
 	}
 
-	@DisplayName("포스트 가져오기")
+	@DisplayName("포스트 잘못된 아이디 가져오기")
 	@Test
 	public void findById_InvalidId_post() {
 		//given
@@ -97,6 +100,36 @@ class PostApiControllerTest {
 		ResponseEntity<PostResponse> responseEntity = testRestTemplate.getForEntity(url, PostResponse.class);
 
 		//then
-		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
+	@DisplayName("포스트 수정")
+	@Test
+	public void update_post() {
+		//given
+		PostSaveRequest postSaveRequest = PostSaveRequest.builder()
+				.title("게시글제목")
+				.content("게시글내용")
+				.author("작성자")
+				.build();
+		long id = postRepository.save(postSaveRequest.toPost()).getId();
+
+		PostUpdateRequest postUpdateRequest = PostUpdateRequest.builder()
+				.title("수정제목")
+				.content("수정내용")
+				.build();
+
+		String url = "http://localhost:" + port + "/api/v1/posts/" + id;
+
+		//when
+		testRestTemplate.put(url, postUpdateRequest);
+
+		//then
+		Post post = postRepository.findById(id).orElseThrow();
+
+		assertThat(post.getId()).isEqualTo(id);
+		assertThat(post.getTitle()).isEqualTo(postUpdateRequest.getTitle());
+		assertThat(post.getContent()).isEqualTo(postUpdateRequest.getContent());
+		assertThat(post.getAuthor()).isEqualTo(postSaveRequest.getAuthor());
 	}
 }
